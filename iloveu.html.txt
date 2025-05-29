@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Matrix de Amor</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at center, #1a001a, #000);
+    }
+
+    canvas {
+      display: block;
+    }
+
+    .heart {
+      position: absolute;
+      font-size: 28px;
+      color: #ff66cc;
+      pointer-events: none;
+      animation: floatHeart 1.8s ease-out forwards;
+    }
+
+    @keyframes floatHeart {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--x), var(--y)) scale(0.5) rotate(180deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+
+<script>
+  const canvas = document.getElementById('matrix');
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  const fontSize = 20;
+  const columns = Math.floor(canvas.width / fontSize);
+  const drops = Array(columns).fill(0);
+  const message = "I love you";
+  const msgLength = message.length;
+
+  // Número de letras visibles por columna (filas densas)
+  const visibleRows = 20;
+
+  function drawMatrix() {
+    // Fondo semitransparente para efecto de desvanecimiento
+    ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.font = `${fontSize}px monospace`;
+
+    for (let i = 0; i < columns; i++) {
+      for (let k = 0; k < visibleRows; k++) {
+        // Posición vertical de cada letra
+        let yPos = (drops[i] - k) * fontSize;
+
+        if (yPos < 0) continue; // no dibujamos arriba de pantalla
+
+        // Letra según la columna (para el mensaje claro)
+        const char = message[i % msgLength];
+
+        // Color rosa neón con brillo variable (más brillante para la letra más baja)
+        let brightness = 70 + (k === 0 ? 30 : 10 * (visibleRows - k) / visibleRows);
+        ctx.fillStyle = `hsl(330, 100%, ${brightness}%)`;
+        ctx.fillText(char, i * fontSize, yPos);
+      }
+
+      // Incrementamos la posición de caída para esta columna
+      if (drops[i] * fontSize > canvas.height + visibleRows * fontSize && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+      drops[i]++;
+    }
+  }
+
+  setInterval(drawMatrix, 50);
+
+  function createHeartExplosion(x, y) {
+    const colors = ["#ff66cc", "#ff99cc", "#ffb6c1", "#ffc0cb", "#ffe6f2"];
+    const count = 50;
+    const scale = 8;
+
+    for (let i = 0; i < count; i++) {
+      const t = Math.PI * 2 * (i / count);
+      const xOffset = 16 * Math.pow(Math.sin(t), 3);
+      const yOffset = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+
+      const heart = document.createElement("div");
+      heart.className = "heart";
+      heart.textContent = "💖";
+      heart.style.color = colors[i % colors.length];
+      heart.style.left = `${x}px`;
+      heart.style.top = `${y}px`;
+
+      heart.style.setProperty('--x', `${xOffset * scale}px`);
+      heart.style.setProperty('--y', `${-yOffset * scale}px`);
+
+      document.body.appendChild(heart);
+      setTimeout(() => heart.remove(), 1800);
+    }
+  }
+
+  document.addEventListener("click", (e) => {
+    createHeartExplosion(e.clientX, e.clientY);
+  });
+
+  document.addEventListener("touchstart", (e) => {
+    const touch = e.touches[0];
+    createHeartExplosion(touch.clientX, touch.clientY);
+  });
+</script>
+
+</body>
+</html>
